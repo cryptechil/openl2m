@@ -1,0 +1,69 @@
+{% extends '_base.html' %}
+
+{% block title %}Activate License{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="fa-solid fa-key"></i> Activate License</h4>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Enter your OpenL2M license serial number to activate the system.
+          </p>
+
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="serial_number" class="form-label">License Serial Number</label>
+              <input
+                type="text"
+                class="form-control"
+                id="serial_number"
+                name="serial_number"
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                required
+                pattern="[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}"
+                title="Format: XXXX-XXXX-XXXX-XXXX"
+              >
+              <div class="form-text">
+                Format: XXXX-XXXX-XXXX-XXXX (16 characters with dashes)
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-unlock"></i> Activate License
+              </button>
+              <a href="{% url 'licensing:status' %}" class="btn btn-secondary">
+                <i class="fa-solid fa-info-circle"></i> View License Status
+              </a>
+            </div>
+          </form>
+
+          <hr class="my-4">
+
+          <div class="alert alert-info">
+            <h6><i class="fa-solid fa-info-circle"></i> License Types</h6>
+            <ul class="mb-0">
+              <li><strong>1-Month Trial:</strong> Full access for 30 days</li>
+              <li><strong>Perpetual:</strong> Unlimited access, no expiration</li>
+            </ul>
+          </div>
+
+          <div class="alert alert-warning">
+            <h6><i class="fa-solid fa-exclamation-triangle"></i> Important</h6>
+            <p class="mb-0">
+              Only one license can be active at a time. Activating a new license
+              will deactivate any previously active license.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

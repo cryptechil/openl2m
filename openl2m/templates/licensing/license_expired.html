@@ -1,0 +1,81 @@
+{% extends '_base.html' %}
+
+{% block title %}License Expired{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+          <h4 class="mb-0">
+            <i class="fa-solid fa-lock"></i> Operation Blocked - Invalid License
+          </h4>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-danger" role="alert">
+            <h5><i class="fa-solid fa-exclamation-triangle"></i> Cannot Perform This Action</h5>
+            <p><strong>{{ message }}</strong></p>
+            <p class="mb-0">
+              Your license is invalid or has expired. You can view data but cannot make any changes
+              until a valid license is activated.
+            </p>
+          </div>
+
+          {% if license %}
+          <h6 class="mt-4">Current License Details:</h6>
+          <table class="table table-sm table-bordered">
+            <tbody>
+              <tr>
+                <th style="width: 30%;">Serial Number</th>
+                <td><code>{{ license.serial_number }}</code></td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ license.get_license_type_display }}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td><span class="badge bg-danger">{{ license.status }}</span></td>
+              </tr>
+              {% if license.expiry_date %}
+              <tr>
+                <th>Expired On</th>
+                <td>{{ license.expiry_date|date:"Y-m-d H:i:s" }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+          {% endif %}
+
+          <div class="alert alert-info mt-4" role="alert">
+            <h6><i class="fa-solid fa-info-circle"></i> What You Can Do:</h6>
+            <ul class="mb-0">
+              <li><strong>View Only:</strong> You can browse and view all data</li>
+              <li><strong>No Changes:</strong> All write operations are blocked</li>
+              <li><strong>Contact Admin:</strong> Ask your administrator to activate a new license</li>
+            </ul>
+          </div>
+
+          <div class="d-grid gap-2 mt-4">
+            {% if is_superuser %}
+              <a href="{% url 'licensing:activate' %}" class="btn btn-primary">
+                <i class="fa-solid fa-key"></i> Activate License (Admin)
+              </a>
+              <a href="/admin/licensing/license/" class="btn btn-secondary">
+                <i class="fa-solid fa-cog"></i> Manage Licenses
+              </a>
+            {% endif %}
+            <a href="{% url 'licensing:status' %}" class="btn btn-info">
+              <i class="fa-solid fa-info-circle"></i> View License Status
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+              <i class="fa-solid fa-arrow-left"></i> Go Back
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

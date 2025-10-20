@@ -1,0 +1,148 @@
+{% extends '_base.html' %}
+
+{% block title %}License Status{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header {% if is_valid %}bg-success{% else %}bg-danger{% endif %} text-white">
+          <h4 class="mb-0">
+            <i class="fa-solid fa-certificate"></i> License Status
+          </h4>
+        </div>
+        <div class="card-body">
+          {% if not license %}
+            <!-- No license active -->
+            <div class="alert alert-danger" role="alert">
+              <h5><i class="fa-solid fa-exclamation-triangle"></i> No Active License</h5>
+              <p>{{ message }}</p>
+              <p class="mb-0">
+                Please contact your administrator to activate a license, or
+                generate a trial license.
+              </p>
+            </div>
+
+            {% if user.is_superuser %}
+            <div class="d-grid gap-2 mt-3">
+              <a href="{% url 'licensing:activate' %}" class="btn btn-primary">
+                <i class="fa-solid fa-key"></i> Activate License
+              </a>
+              <a href="/admin/licensing/license/" class="btn btn-secondary">
+                <i class="fa-solid fa-cog"></i> Manage Licenses (Admin)
+              </a>
+            </div>
+            {% endif %}
+
+          {% else %}
+            <!-- License exists -->
+            <table class="table table-bordered">
+              <tbody>
+                <tr>
+                  <th style="width: 30%;">Serial Number</th>
+                  <td><code>{{ license.serial_number }}</code></td>
+                </tr>
+                <tr>
+                  <th>License Type</th>
+                  <td>
+                    <span class="badge {% if license.license_type == 2 %}bg-success{% else %}bg-info{% endif %}">
+                      {{ license.get_license_type_display }}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Status</th>
+                  <td>
+                    {% if is_valid %}
+                      <span class="badge bg-success">{{ license.status }}</span>
+                    {% else %}
+                      <span class="badge bg-danger">{{ license.status }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% if license.organization %}
+                <tr>
+                  <th>Organization</th>
+                  <td>{{ license.organization }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <th>Activation Date</th>
+                  <td>
+                    {% if license.activation_date %}
+                      {{ license.activation_date|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                      Not activated
+                    {% endif %}
+                  </td>
+                </tr>
+                {% if license.expiry_date %}
+                <tr>
+                  <th>Expiry Date</th>
+                  <td>
+                    {{ license.expiry_date|date:"Y-m-d H:i:s" }}
+                    {% if license.is_expired %}
+                      <span class="badge bg-danger">EXPIRED</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endif %}
+                {% if license.days_remaining is not None %}
+                <tr>
+                  <th>Days Remaining</th>
+                  <td>
+                    <strong>{{ license.days_remaining }}</strong> days
+                    {% if license.days_remaining < 7 and license.days_remaining > 0 %}
+                      <span class="badge bg-warning">Expiring Soon</span>
+                    {% elif license.days_remaining == 0 %}
+                      <span class="badge bg-danger">Expired Today</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+
+            {% if not is_valid %}
+            <div class="alert alert-danger mt-3" role="alert">
+              <h5><i class="fa-solid fa-lock"></i> License Invalid</h5>
+              <p>{{ message }}</p>
+              <p class="mb-0">
+                <strong>You can view data but cannot make any changes until a valid license is activated.</strong>
+              </p>
+            </div>
+            {% elif license.days_remaining and license.days_remaining < 7 %}
+            <div class="alert alert-warning mt-3" role="alert">
+              <h5><i class="fa-solid fa-exclamation-triangle"></i> License Expiring Soon</h5>
+              <p class="mb-0">
+                Your trial license will expire in <strong>{{ license.days_remaining }}</strong> days.
+                Please contact your vendor to obtain a perpetual license.
+              </p>
+            </div>
+            {% endif %}
+
+            {% if user.is_superuser %}
+            <div class="d-grid gap-2 mt-3">
+              <a href="{% url 'licensing:activate' %}" class="btn btn-primary">
+                <i class="fa-solid fa-key"></i> Activate Different License
+              </a>
+              <a href="/admin/licensing/license/" class="btn btn-secondary">
+                <i class="fa-solid fa-cog"></i> Manage Licenses (Admin)
+              </a>
+            </div>
+            {% endif %}
+
+          {% endif %}
+        </div>
+        <div class="card-footer text-muted">
+          <small>
+            <i class="fa-solid fa-info-circle"></i>
+            For licensing questions, contact your system administrator.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
