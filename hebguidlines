@@ -1,0 +1,123 @@
+בטח, זה סיכום מצוין של כל מה שעברנו.
+
+הנה Playbook מלא, מאפס ועד לשרת רץ ומאובטח, כולל פתרון הבעיות הנפוצות שנתקלנו בהן.
+
+-----
+
+### 📖 Playbook: התקנת OpenL2M מ-0 על Ubuntu Server
+
+#### 🖥️ שלב 1: הקמת שרת Ubuntu
+
+1.  **צור VM חדש** ב-VMware Workstation.
+2.  **הורד קובץ ISO** של Ubuntu Server 22.04 LTS.
+3.  **התקן את Ubuntu Server:**
+      * **רשת:** הגדר את מתאם הרשת ל-**Bridged (Automatic)**.
+      * **SSH:** במהלך ההתקנה, סמן `[X] Install OpenSSH server`.
+      * **חבילות:** אל תתקין חבילות נוספות (כמו Docker) דרך תפריט ההתקנה.
+4.  לאחר סיום ההתקנה, התחבר לשרת באמצעות **SSH**.
+
+-----
+
+#### 🛠️ שלב 2: הכנת השרת (Docker, Git, והרשאות)
+
+1.  **עדכן את המערכת:**
+
+    ```bash
+    sudo apt update && sudo apt upgrade -y
+    ```
+
+2.  **התקן `git` ו-`curl`:**
+
+    ```bash
+    sudo apt install git curl -y
+    ```
+
+3.  **התקן את Docker (באמצעות הסקריפט הרשמי):**
+
+    ```bash
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    ```
+
+4.  **(מומלץ) תקן הרשאות לצמיתות:**
+
+      * הוסף את המשתמש שלך לקבוצת `docker` כדי להימנע משימוש ב-`sudo` לכל פקודת docker.
+        ```bash
+        sudo usermod -aG docker $USER
+        ```
+      * **קריטי:** כדי שהשינוי ייכנס לתוקף, **התנתק מהשרת (`exit`) והתחבר מחדש.**
+
+    > **הערה:** אם דילגת על ה"התחברות מחדש", עליך להוסיף `sudo` לפני **כל** פקודת `docker` או `trivy` בהמשך המדריך.
+
+-----
+
+#### 🚀 שלב 3: התקנה והרצה של OpenL2M
+
+1.  **שכפל את מאגר ה-Docker** (ה-Repo הנכון שסיפקת):
+    ```bash
+    git clone https://github.com/cryptechil/l2m-docker.git
+    ```
+2.  **היכנס לתיקייה:**
+    ```bash
+    cd l2m-docker
+    ```
+3.  **הפעל את השירותים:**
+    (פקודה זו מורידה את ה-images, בונה את הקונטיינרים ומריצה אותם ברקע).
+    ```bash
+    docker compose up -d
+    ```
+4.  **ודא שהשירותים רצים:**
+    ```bash
+    docker compose ps
+    ```
+      * ודא שכל השירותים בעמודה `STATUS` מראים `Up` או `running`.
+      * שים לב לשמות המדויקים בעמודות `SERVICE` ו-`IMAGE` (נצטרך אותם).
+          * במקרה שלך: השירות היה `openl2m` וה-Image היה `openl2m:test-build`.
+
+-----
+
+#### 👤 שלב 4: יצירת משתמש-על (Superuser)
+
+1.  **הרץ את פקודת `exec`** כדי להפעיל פקודה *בתוך* הקונטיינר שרץ.
+    (השתמש בשם השירות `openl2m` שמצאת בשלב הקודם).
+    ```bash
+    docker compose exec openl2m python manage.py createsuperuser
+    ```
+2.  **עקוב אחר ההוראות:** הזן שם משתמש, כתובת אימייל וסיסמה.
+
+-----
+
+#### 🌐 שלב 5: גישה וסריקה
+
+1.  **גש לממשק ה-WEB:**
+
+      * מצא את ה-IP של השרת שלך (עם `ip a`).
+      * פתח דפדפן וגלוש ל-`http://<IP_OF_YOUR_VM>:8000`
+      * (שים לב: הפלט שלך הראה שהשירות רץ על פורט **8000**, לא 8080).
+
+2.  **(אופציונלי) סרוק את ה-Image לאיתור חולשות:**
+    (השתמש בשם ה-Image `openl2m:test-build` שמצאת בשלב 3).
+
+    ```bash
+    trivy image openl2m:test-build
+    ```
+
+-----
+
+### 🔑 סיכום פתרון בעיות (מה שלמדנו)
+
+  * **שגיאה:** `permission denied ... docker.sock`
+
+      * **סיבה:** המשתמש שלך לא בקבוצת `docker`, או שכן הוספת אותו אבל לא התחברת מחדש.
+      * **פתרון מהיר:** הוסף `sudo` לפני הפקודה (`sudo docker...`, `sudo trivy...`).
+      * **פתרון קבוע:** התנתק והתחבר מחדש ל-SSH.
+
+  * **שגיאה:** `service "xyz" is not running`
+
+      * **סיבה:** ניסיון להריץ `exec` על שירות שכבה או נכשל.
+      * **פתרון:** הרץ `docker compose up -d` כדי להפעיל את השירותים, ובדוק עם `docker compose ps` שהם אכן במצב `Up`.
+
+  * **שגיאה:** `unable to find the specified image "openl2m"`
+
+      * **סיבה:** שימוש בשם *שירות* (`openl2m`) במקום בשם *Image* (`openl2m:test-build`).
+      * **פתרון:** השתמש תמיד בפקודה `docker compose ps` כדי למצוא את השמות המדויקים של ה-`SERVICE` וה-`IMAGE`.
